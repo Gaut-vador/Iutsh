@@ -10,7 +10,7 @@ OBJECTS=$(SOURCES:.c=.o)
 
 # compilation finale
 main: $(OBJECTS)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ ligne_commande.o
 
 # Règle générique : $< == le fichier .c compilé
 %.o: %.c
