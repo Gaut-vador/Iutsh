@@ -16,14 +16,19 @@ void execute_ligne_commande(void){
 			perror("execvp");
 		}
 		else if(id != -1){
+      if (wait(NULL) == -1) {
+        perror("wait :");
+        exit(EXIT_FAILURE);
+      }
+      fflush(stdout);
 			//waitpid(id, int *status, int options);
 		}
 	}
 }
 
 void afficher_prompt(void){
-
-	char *directory = NULL;
+  
+    char *directory = NULL;
   	char *user = NULL;
   	char *home = NULL;
   	char hostname[20];
@@ -32,14 +37,17 @@ void afficher_prompt(void){
   	home = getenv("HOME");
   	directory = getcwd(NULL, 128);
   	char *repertoire = malloc(sizeof(char)*130);
-  	if(strstr(directory,home)==NULL){
+  	
+    if(strstr(directory,home)==NULL){
     	printf("%s@%s:%s$ ", user, hostname, directory);
-  	}else{
+  	}
+    else{
     	repertoire[0]='~';
     	int temp = strlen(home);
     	addStr(repertoire, 1, directory+temp, 128-temp);
     	printf("%s@%s:%s$ ", user, hostname, repertoire);
   	}
+
   	fflush(stdout);
   	free(repertoire);
   	free(directory);
