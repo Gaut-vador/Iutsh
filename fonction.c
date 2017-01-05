@@ -1,41 +1,50 @@
 #include "header.h"
 
-void execute_ligne_commande(void){
-	int flag, nb;
-	int *pFlag = &flag;
-	int *pNb = &nb;
+int *pids;
+int nbpids;
+void execute_ligne_commande() {
+  int flag = -1 , nb = -1;
+  char ***argv = ligne_commande(&flag,&nb);
+  int pid , din , dout , t[2];
 
-	char ***commande = ligne_commande(pFlag, pNb);
-
-    while(flag == 1){
-    int pid = fork();
-
-      if(pid == 0){
-        execvp(commande[0][0], commande[0]);
-        perror("execvp");
-        exit(EXIT_FAILURE);
-      }
-      else if(pid != -1){
-        afficher_prompt();
-        commande = ligne_commande(pFlag, pNb);
-      }
+  if(argv == NULL) {
+    printf("Ligne de commande incorrecte \n");
   }
 
-	if(flag == 0){
-		pid_t id = fork();
-
-		if(id == 0){
-			execvp(commande[0][0], commande[0]);
-			perror("execvp");
-		}
-		else if(id != -1){
-      if (wait(NULL) == -1) {
-        perror("wait :");
-        exit(EXIT_FAILURE);
+  din = 0;
+  pids = (int *)malloc(sizeof(int)*nb);
+  
+  int i = 0;
+  for(i=0;i<nb;i++) {
+    if(i == nb-1) {
+      dout=1;
+    }else {
+      pipe(t);
+      dout = t[1];
+    }
+    pid = lance_commande(din,dout,argv[i][0],argv[i]);
+    if(pid == -1) {
+      printf("Error");
+    }
+    pids[i] = pid;
+    nbpids = (i + 1);
+    if(!flag) {
+      waitpid(pid,NULL,0);
+    }
+    if(i!=nb-1) {
+      close(dout);
+      if(i!=0) {
+  close(din);
       }
-      fflush(stdout);
-		}
-	}
+    }else if(nb>1 && i==(nb-1)) {
+      close(din);
+    }
+    if(nb!=1)
+      din = t[0];
+  }
+  free(pids);
+  nbpids = 0;
+  clean(argv);
 }
 
 
@@ -96,4 +105,10 @@ int lance_commande( int in, int out, char *com, char ** argv){
     return -1;
   }
   return pid;
+}
+
+void clean() {
+  pid_t pid;
+  int status;
+  while((pid = waitpid( pid, &status, WNOHANG ) ) > 0 ){}
 }
